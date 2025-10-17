@@ -10,6 +10,7 @@ use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\PortalResidenteController;
 use App\Http\Controllers\ResidenteLoginController; // <-- NUEVO
 
 /*
