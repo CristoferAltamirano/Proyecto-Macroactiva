@@ -85,4 +85,18 @@ class PortalResidenteTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_residente_can_download_cobro_pdf()
+    {
+        $residente = Unidad::factory()->create();
+        $cobro = Cobro::factory()->create(['unidad_id' => $residente->id]);
+
+        $this->actingAs($residente, 'residente');
+
+        $response = $this->get(route('portal.cobro.pdf', $cobro->id));
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $response->assertHeader('Content-Disposition', 'attachment; filename="Boleta-'.$cobro->unidad->numero.'-'.$cobro->periodo->format('Y-m').'.pdf"');
+    }
 }

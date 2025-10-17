@@ -63,5 +63,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
     Route::middleware('auth:residente')->group(function () {
         Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
         Route::get('/cobro/{id}', [PortalResidenteController::class, 'showCobro'])->name('cobro.show');
+        Route::get('/cobro/{id}/pdf', [PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
     });
 });
