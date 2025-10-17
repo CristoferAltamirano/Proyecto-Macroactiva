@@ -294,4 +294,28 @@ class PortalResidenteController extends Controller
 
         return view('portal_estado', compact('porUnidad'));
     }
+
+    /**
+     * Muestra el dashboard principal del residente.
+     */
+    public function dashboard()
+    {
+        // 1. Identificamos a la Unidad que ha iniciado sesión.
+        // Usamos el guard 'residente' que definimos en auth.php.
+        $unidad = auth()->guard('residente')->user();
+
+        // 2. Cargamos los cobros asociados a esa unidad.
+        // La relación 'cobros' debe estar definida en el modelo Unidad.
+        $cobros = $unidad->cobros()->orderBy('periodo', 'desc')->get();
+
+        // 3. Calculamos el saldo total pendiente.
+        $saldo_total_pendiente = $cobros->where('estado', 'pendiente')->sum('monto_total');
+
+        // 4. Pasamos los datos a la vista.
+        return view('portal.dashboard', [
+            'unidad' => $unidad,
+            'cobros' => $cobros,
+            'saldo_total_pendiente' => $saldo_total_pendiente,
+        ]);
+    }
 }
