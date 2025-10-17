@@ -8,6 +8,7 @@ use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
+use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ResidenteLoginController; // <-- NUEVO
 
@@ -37,6 +38,12 @@ Route::middleware('auth')->group(function () {
     // Rutas de Reportes
     Route::get('/reportes/morosidad', [ReportesController::class, 'morosidad'])->name('reportes.morosidad');
     Route::get('/reportes/gastos', [ReportesController::class, 'gastosMensuales'])->name('reportes.gastos');
+
+    // Rutas de Configuración (solo para Super Admin)
+    Route::middleware(['role:super-admin'])->group(function () {
+        Route::get('/configuracion', [ConfiguracionController::class, 'edit'])->name('configuracion.edit');
+        Route::post('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+    });
 });
 
 /*

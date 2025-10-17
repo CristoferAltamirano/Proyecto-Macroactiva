@@ -63,7 +63,18 @@
                     </div>
                 </li>
             </ul>
+            </ul>
             <hr>
+            {{-- Menú de Configuración solo para Super Admin --}}
+            @if(Auth::check() && Auth::user()->role === 'super-admin')
+            <div class="mb-3">
+                <a href="{{ route('configuracion.edit') }}" class="nav-link text-white {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
+                    <i class="bi bi-gear-fill me-2"></i> Configuración
+                </a>
+            </div>
+            <hr>
+            @endif
+
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
