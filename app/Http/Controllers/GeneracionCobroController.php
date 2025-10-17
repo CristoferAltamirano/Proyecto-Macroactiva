@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cobro;
+use App\Models\Configuracion;
 use App\Models\Gasto;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
@@ -35,9 +36,10 @@ class GeneracionCobroController extends Controller
         // 3. Cálculo: Sumamos todos los gastos del periodo.
         $totalGastosOrdinarios = Gasto::where('periodo_gasto', $periodo)->where('tipo', 'ordinario')->sum('monto');
 
-        // Según la ley chilena, el fondo de reserva se calcula sobre los gastos ordinarios.
-        // Usaremos un 10% como ejemplo, esto debería ser configurable.
-        $montoFondoReservaTotal = $totalGastosOrdinarios * 0.10;
+        // Leemos el porcentaje del fondo de reserva desde la configuración.
+        // Usamos 10.00 como valor por defecto si no está definido.
+        $porcentajeFondo = (float) Configuracion::where('clave', 'fondo_reserva_porcentaje')->value('valor') ?? 10.00;
+        $montoFondoReservaTotal = $totalGastosOrdinarios * ($porcentajeFondo / 100);
 
         // 4. Obtenemos todas las unidades activas para generarles el cobro.
         $unidadesActivas = Unidad::where('estado', 'Activo')->get();
