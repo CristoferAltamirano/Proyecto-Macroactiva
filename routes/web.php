@@ -8,6 +8,7 @@ use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ResidenteLoginController; // <-- NUEVO
 
 /*
@@ -32,6 +33,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/cobros', [CobroController::class, 'index'])->name('cobros.index');
     Route::patch('/cobros/{cobro}/pagar', [CobroController::class, 'registrarPago'])->name('cobros.pagar');
+
+    // Rutas de Reportes
+    Route::get('/reportes/morosidad', [ReportesController::class, 'morosidad'])->name('reportes.morosidad');
+    Route::get('/reportes/gastos', [ReportesController::class, 'gastosMensuales'])->name('reportes.gastos');
 });
 
 /*
