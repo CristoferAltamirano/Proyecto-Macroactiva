@@ -47,6 +47,21 @@
                         <i class="bi bi-journal-check me-2"></i> Revisión de Cobros
                     </a>
                 </li>
+                <li class="nav-item mb-1">
+                    <a href="#reportes-submenu" data-bs-toggle="collapse" class="nav-link text-white {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                        <i class="bi bi-graph-up me-2"></i> Reportes
+                    </a>
+                    <div class="collapse {{ request()->routeIs('reportes.*') ? 'show' : '' }}" id="reportes-submenu">
+                        <ul class="nav flex-column ms-4">
+                            <li class="nav-item">
+                                <a href="{{ route('reportes.morosidad') }}" class="nav-link text-white {{ request()->routeIs('reportes.morosidad') ? 'fw-bold' : '' }}">Morosidad</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('reportes.gastos') }}" class="nav-link text-white {{ request()->routeIs('reportes.gastos') ? 'fw-bold' : '' }}">Gastos Mensuales</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
             </ul>
             <hr>
             <div class="dropdown">
