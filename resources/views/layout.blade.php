@@ -47,34 +47,17 @@
                         <i class="bi bi-journal-check me-2"></i> Revisión de Cobros
                     </a>
                 </li>
-                <li class="nav-item mb-1">
-                    <a href="#reportes-submenu" data-bs-toggle="collapse" class="nav-link text-white {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                        <i class="bi bi-graph-up me-2"></i> Reportes
-                    </a>
-                    <div class="collapse {{ request()->routeIs('reportes.*') ? 'show' : '' }}" id="reportes-submenu">
-                        <ul class="nav flex-column ms-4">
-                            <li class="nav-item">
-                                <a href="{{ route('reportes.morosidad') }}" class="nav-link text-white {{ request()->routeIs('reportes.morosidad') ? 'fw-bold' : '' }}">Morosidad</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('reportes.gastos') }}" class="nav-link text-white {{ request()->routeIs('reportes.gastos') ? 'fw-bold' : '' }}">Gastos Mensuales</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
             </ul>
             </ul>
             <hr>
-            {{-- Menú de Configuración solo para Super Admin --}}
             @if(Auth::check() && Auth::user()->role === 'super-admin')
             <div class="mb-3">
-                <a href="{{ route('configuracion.edit') }}" class="nav-link text-white {{ request()->routeIs('configuracion.*') ? 'active' : '' }}">
-                    <i class="bi bi-gear-fill me-2"></i> Configuración
+                <a href="{{ route('users.index') }}" class="nav-link text-white {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                    <i class="bi bi-people-fill me-2"></i> Gestión de Administradores
                 </a>
             </div>
             <hr>
             @endif
-
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>

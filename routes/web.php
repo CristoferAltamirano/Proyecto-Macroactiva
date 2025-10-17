@@ -8,10 +8,8 @@ use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
-use App\Http\Controllers\ConfiguracionController;
-use App\Http\Controllers\ReportesController;
-use App\Http\Controllers\PortalResidenteController;
 use App\Http\Controllers\ResidenteLoginController; // <-- NUEVO
+use App\Http\Controllers\AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,14 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/cobros', [CobroController::class, 'index'])->name('cobros.index');
     Route::patch('/cobros/{cobro}/pagar', [CobroController::class, 'registrarPago'])->name('cobros.pagar');
 
-    // Rutas de Reportes
-    Route::get('/reportes/morosidad', [ReportesController::class, 'morosidad'])->name('reportes.morosidad');
-    Route::get('/reportes/gastos', [ReportesController::class, 'gastosMensuales'])->name('reportes.gastos');
-
-    // Rutas de Configuración (solo para Super Admin)
     Route::middleware(['role:super-admin'])->group(function () {
-        Route::get('/configuracion', [ConfiguracionController::class, 'edit'])->name('configuracion.edit');
-        Route::post('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+        Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
     });
 });
 
@@ -62,8 +54,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
-        Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
-        Route::get('/cobro/{id}', [PortalResidenteController::class, 'showCobro'])->name('cobro.show');
-        Route::get('/cobro/{id}/pdf', [PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
+        // Aún no creamos esta ruta, pero ya la dejamos definida.
+        Route::get('/dashboard', function () {
+            return '¡Bienvenido al portal de residentes!';
+        })->name('dashboard');
     });
 });
