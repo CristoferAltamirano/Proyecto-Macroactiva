@@ -2,57 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cobro;
-use App\Models\Gasto;
-use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportesController extends Controller
 {
-    public function morosidad()
-    {
-        $unidadesConDeuda = Unidad::whereHas('cobros', function ($query) {
-            $query->where('estado', 'pendiente');
-        })->with(['cobros' => function ($query) {
-            $query->where('estado', 'pendiente');
-        }])->get();
-
-        $reporte = $unidadesConDeuda->map(function ($unidad) {
-            $totalDeuda = $unidad->cobros->sum('monto_total');
-            return [
-                'unidad' => $unidad,
-                'total_deuda' => $totalDeuda,
-            ];
-        });
-
-        return view('reportes.morosidad', ['reporte' => $reporte]);
-    }
-
-    public function gastosMensuales(Request $request)
-    {
-        $request->validate([
-            'mes' => 'nullable|integer|between:1,12',
-            'ano' => 'nullable|integer|min:2000',
-        ]);
-
-        $mes = $request->input('mes', now()->month);
-        $ano = $request->input('ano', now()->year);
-
-        $gastos = Gasto::whereYear('fecha_gasto', $ano)
-            ->whereMonth('fecha_gasto', $mes)
-            ->get();
-
-        $totalGastos = $gastos->sum('monto');
-
-        return view('reportes.gastos', [
-            'gastos' => $gastos,
-            'totalGastos' => $totalGastos,
-            'mes' => $mes,
-            'ano' => $ano,
-        ]);
-    }
-
     public function panel()
     {
         // Fechas/periodos sugeridos por defecto

@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cobro;
-use App\Models\Configuracion;
 use App\Models\Gasto;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\NuevoCobroDisponible;
 
 class GeneracionCobroController extends Controller
 {
@@ -38,10 +35,9 @@ class GeneracionCobroController extends Controller
         // 3. Cálculo: Sumamos todos los gastos del periodo.
         $totalGastosOrdinarios = Gasto::where('periodo_gasto', $periodo)->where('tipo', 'ordinario')->sum('monto');
 
-        // Leemos el porcentaje del fondo de reserva desde la configuración.
-        // Usamos 10.00 como valor por defecto si no está definido.
-        $porcentajeFondo = (float) Configuracion::where('clave', 'fondo_reserva_porcentaje')->value('valor') ?? 10.00;
-        $montoFondoReservaTotal = $totalGastosOrdinarios * ($porcentajeFondo / 100);
+        // Según la ley chilena, el fondo de reserva se calcula sobre los gastos ordinarios.
+        // Usaremos un 10% como ejemplo, esto debería ser configurable.
+        $montoFondoReservaTotal = $totalGastosOrdinarios * 0.10;
 
         // 4. Obtenemos todas las unidades activas para generarles el cobro.
         $unidadesActivas = Unidad::where('estado', 'Activo')->get();
@@ -55,7 +51,7 @@ class GeneracionCobroController extends Controller
             $montoGastoComunUnidad = $totalGastosOrdinarios * $unidad->prorrateo;
             $montoFondoReservaUnidad = $montoFondoReservaTotal * $unidad->prorrateo;
 
-            $cobro = Cobro::create([
+            Cobro::create([
                 'unidad_id' => $unidad->id,
                 'periodo' => $periodo,
                 'monto_gasto_comun' => round($montoGastoComunUnidad),
@@ -63,11 +59,6 @@ class GeneracionCobroController extends Controller
                 'monto_total' => round($montoGastoComunUnidad + $montoFondoReservaUnidad), // Sumaremos multas después
                 'estado' => 'pendiente',
             ]);
-
-            // Ponemos en cola el email para notificar al residente
-            if ($unidad->email) {
-                Mail::to($unidad->email)->queue(new NuevoCobroDisponible($cobro));
-            }
         }
 
         // 6. Redirección con mensaje de éxito.
