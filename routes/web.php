@@ -62,5 +62,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
     // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
         Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
+        Route::get('/cobro/{id}', [PortalResidenteController::class, 'showCobro'])->name('cobro.show');
     });
 });

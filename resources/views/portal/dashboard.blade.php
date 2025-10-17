@@ -50,7 +50,7 @@
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        <a href="#" class="btn btn-primary btn-sm">
+                                        <a href="{{ route('portal.cobro.show', $cobro->id) }}" class="btn btn-primary btn-sm">
                                             Ver Detalle / Pagar
                                         </a>
                                     </td>

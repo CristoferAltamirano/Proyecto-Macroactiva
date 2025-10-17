@@ -7,6 +7,24 @@ use Illuminate\Support\Facades\Schema;
 
 class PortalResidenteController extends Controller
 {
+    public function showCobro($id)
+    {
+        $residente = auth()->guard('residente')->user();
+        $cobro = Cobro::findOrFail($id);
+
+        // Seguridad: Asegurarse de que el cobro pertenece al residente autenticado
+        if ($cobro->unidad_id !== $residente->id) {
+            abort(403, 'Acceso no autorizado.');
+        }
+
+        // Obtener los gastos del mismo periodo para el desglose
+        $gastosDelPeriodo = Gasto::where('periodo_gasto', $cobro->periodo)->get();
+
+        return view('portal.cobro_detalle', [
+            'cobro' => $cobro,
+            'gastosDelPeriodo' => $gastosDelPeriodo,
+        ]);
+    }
     /** ===== Helpers ===== */
 
     /** Devuelve el id_persona del usuario si existe (por campo directo o por email). */
