@@ -11,6 +11,12 @@
         </a>
     </div>
 
+    <div class="text-end mb-3">
+        <a href="{{ route('portal.cobro.pdf', $cobro->id) }}" class="btn btn-info">
+            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar PDF
+        </a>
+    </div>
+
     <div class="row">
         <div class="col-lg-5 mb-4">
             <div class="card h-100">

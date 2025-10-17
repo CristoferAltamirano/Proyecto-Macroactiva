@@ -8,6 +8,8 @@ use App\Models\Gasto;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NuevoCobroDisponible;
 
 class GeneracionCobroController extends Controller
 {
@@ -53,7 +55,7 @@ class GeneracionCobroController extends Controller
             $montoGastoComunUnidad = $totalGastosOrdinarios * $unidad->prorrateo;
             $montoFondoReservaUnidad = $montoFondoReservaTotal * $unidad->prorrateo;
 
-            Cobro::create([
+            $cobro = Cobro::create([
                 'unidad_id' => $unidad->id,
                 'periodo' => $periodo,
                 'monto_gasto_comun' => round($montoGastoComunUnidad),
@@ -61,6 +63,11 @@ class GeneracionCobroController extends Controller
                 'monto_total' => round($montoGastoComunUnidad + $montoFondoReservaUnidad), // Sumaremos multas después
                 'estado' => 'pendiente',
             ]);
+
+            // Ponemos en cola el email para notificar al residente
+            if ($unidad->email) {
+                Mail::to($unidad->email)->queue(new NuevoCobroDisponible($cobro));
+            }
         }
 
         // 6. Redirección con mensaje de éxito.
