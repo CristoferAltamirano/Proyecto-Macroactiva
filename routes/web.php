@@ -61,9 +61,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
-        // Aún no creamos esta ruta, pero ya la dejamos definida.
-        Route::get('/dashboard', function () {
-            return '¡Bienvenido al portal de residentes!';
-        })->name('dashboard');
+        Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
     });
 });
