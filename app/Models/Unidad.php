@@ -3,28 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable; // Se asegura que pueda iniciar sesión
+use Illuminate\Notifications\Notifiable; // Necesario para modelos "Authenticatable"
 
-class User extends Authenticatable
+class Unidad extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable; // Añadimos Notifiable
 
     /**
-     * La tabla asociada con el modelo.
-     * FORZAMOS a Laravel a usar la tabla 'users'.
+     * El nombre de la tabla asociada con el modelo.
      * @var string
      */
-    protected $table = 'users';
+    protected $table = 'unidades';
 
     /**
      * The attributes that are mass assignable.
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'numero',
+        'residente',
+        'propietario',
         'email',
         'password',
+        'telefono',
+        'prorrateo',
+        'estado',
     ];
 
     /**
@@ -38,12 +42,14 @@ class User extends Authenticatable
 
     /**
      * Get the attributes that should be cast.
+     *
      * @return array<string, string>
      */
     protected function casts(): array
     {
+        // 👇 ESTA ES LA LÍNEA MÁGICA QUE ARREGLA EL LOGIN DEL RESIDENTE 👇
+        // Le dice a Laravel que la columna 'password' siempre debe ser tratada como un hash.
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

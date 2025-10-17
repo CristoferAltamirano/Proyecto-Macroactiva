@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+{
+    Schema::create('gastos', function (Blueprint $table) {
+        $table->id();
+        $table->string('descripcion');
+        $table->unsignedInteger('monto');
+        $table->enum('tipo', ['ordinario', 'extraordinario'])->default('ordinario');
+        $table->date('fecha_gasto');
+        $table->date('periodo_gasto'); // Primer día del mes al que corresponde el gasto. Ej: 2025-10-01
+        $table->string('documento_path')->nullable(); // Para guardar la ruta a una boleta/factura
+        $table->timestamps();
+    });
+}
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('gastos');
+    }
+};

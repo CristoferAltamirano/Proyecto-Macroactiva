@@ -2,16 +2,24 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash; // Importante importar Hash
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
-        $this->call([
-            CuentasSeeder::class,
-            // UsuarioSeeder::class,
-            // DemoBasicoSeeder::class,
+        // Usamos User::create para crear el usuario de forma segura.
+        // Esto utiliza el $fillable que ya corregimos en el modelo User.
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@macroactiva.com',
+            'password' => Hash::make('password'),
         ]);
     }
 }
