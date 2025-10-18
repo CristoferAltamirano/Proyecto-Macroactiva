@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Gasto;
+use App\Services\ContabilidadService;
 use Illuminate\Http\Request;
 
 class GastoController extends Controller
@@ -28,10 +29,13 @@ class GastoController extends Controller
             'periodo_gasto' => 'required|date',
         ]);
 
-        Gasto::create($request->all());
+        $gasto = Gasto::create($request->all());
+
+        // Registrar el asiento contable
+        (new ContabilidadService())->registrarGasto($gasto);
 
         return redirect()->route('gastos.index')
-                         ->with('success', '¡Gasto registrado exitosamente!');
+                         ->with('success', '¡Gasto registrado y contabilizado exitosamente!');
     }
 
     /**

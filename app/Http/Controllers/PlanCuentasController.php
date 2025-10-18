@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class PlanCuentasController extends Controller
 {
@@ -13,41 +14,57 @@ class PlanCuentasController extends Controller
         return view('admin_cuentas', compact('cuentas'));
     }
 
-    public function store(Request $r)
+    public function create()
     {
-        $data = $r->validate([
-            'id_cta_contable' => ['nullable','integer','min:1'],
-            'codigo' => ['required','string','max:40'],
-            'nombre' => ['required','string','max:80'],
-        ]);
-
-        // Verificar unicidad de código
-        $exists = DB::table('cuenta_contable')
-            ->where('codigo',$data['codigo'])
-            ->when(!empty($data['id_cta_contable']), fn($q)=>$q->where('id_cta_contable','<>',$data['id_cta_contable']))
-            ->exists();
-        if ($exists) return back()->with('error','El código de cuenta ya existe.');
-
-        if (!empty($data['id_cta_contable'])) {
-            DB::table('cuenta_contable')->where('id_cta_contable',$data['id_cta_contable'])
-                ->update(['codigo'=>$data['codigo'],'nombre'=>$data['nombre']]);
-            return back()->with('ok','Cuenta actualizada.');
-        } else {
-            DB::table('cuenta_contable')->insert([
-                'codigo'=>$data['codigo'],'nombre'=>$data['nombre']
-            ]);
-            return back()->with('ok','Cuenta creada.');
-        }
+        // No es necesario, el formulario está en la vista index
+        return redirect()->route('cuentas.index');
     }
 
-    public function destroy(int $id)
+    public function store(Request $request)
     {
-        // Evitar borrar si está referenciada en libro_movimiento
-        $ref = DB::table('libro_movimiento')->where('id_cta_contable',$id)->exists();
-        if ($ref) return back()->with('error','No se puede eliminar: la cuenta tiene movimientos.');
+        $data = $request->validate([
+            'codigo' => ['required', 'string', 'max:40', 'unique:cuenta_contable,codigo'],
+            'nombre' => ['required', 'string', 'max:80'],
+        ]);
 
-        DB::table('cuenta_contable')->where('id_cta_contable',$id)->delete();
-        return back()->with('ok','Cuenta eliminada.');
+        DB::table('cuenta_contable')->insert($data);
+
+        return redirect()->route('cuentas.index')->with('success', 'Cuenta creada correctamente.');
+    }
+
+    public function edit($id)
+    {
+        $cuentas = DB::table('cuenta_contable')->orderBy('codigo')->get();
+        $cuenta_a_editar = DB::table('cuenta_contable')->where('id_cta_contable', $id)->first();
+
+        if (!$cuenta_a_editar) {
+            return redirect()->route('cuentas.index')->with('error', 'La cuenta que intentas editar no existe.');
+        }
+
+        return view('admin_cuentas', compact('cuentas', 'cuenta_a_editar'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->validate([
+            'codigo' => ['required', 'string', 'max:40', Rule::unique('cuenta_contable')->ignore($id, 'id_cta_contable')],
+            'nombre' => ['required', 'string', 'max:80'],
+        ]);
+
+        DB::table('cuenta_contable')->where('id_cta_contable', $id)->update($data);
+
+        return redirect()->route('cuentas.index')->with('success', 'Cuenta actualizada correctamente.');
+    }
+
+    public function destroy($id)
+    {
+        $ref = DB::table('libro_movimiento')->where('id_cta_contable', $id)->exists();
+        if ($ref) {
+            return back()->with('error', 'No se puede eliminar: la cuenta tiene movimientos asociados.');
+        }
+
+        DB::table('cuenta_contable')->where('id_cta_contable', $id)->delete();
+        return redirect()->route('cuentas.index')->with('success', 'Cuenta eliminada correctamente.');
     }
 
     public function exportCsv()
@@ -61,23 +78,22 @@ class PlanCuentasController extends Controller
             );
         }
         $fn = 'plan_cuentas_'.date('Ymd_His').'.csv';
-        return response($csv,200,[
+        return response($csv, 200, [
             'Content-Type'=>'text/csv; charset=UTF-8',
             'Content-Disposition'=>"attachment; filename=\"$fn\"",
         ]);
     }
 
-    public function importCsv(Request $r)
+    public function importCsv(Request $request)
     {
-        $v = $r->validate([
+        $v = $request->validate([
             'archivo' => ['required','file','mimes:csv,txt'],
             'modo'    => ['required','in:insert,upsert,replace'],
         ]);
 
-        $fh = fopen($r->file('archivo')->getRealPath(),'r');
+        $fh = fopen($request->file('archivo')->getRealPath(),'r');
         if (!$fh) return back()->with('error','No se pudo leer el archivo.');
 
-        // Detectar separador simple
         $first = fgets($fh);
         $delimiter = (substr_count($first,';') > substr_count($first,',')) ? ';' : ',';
         $headers = str_getcsv($first, $delimiter);
@@ -93,15 +109,13 @@ class PlanCuentasController extends Controller
 
         $n=0; $u=0;
         if ($v['modo']==='replace') {
-            // cuidado: solo borra si no hay movimientos (para seguridad)
             $hasMov = DB::table('libro_movimiento')->exists();
-            if ($hasMov) return back()->with('error','No se puede REPLACE: hay movimientos contables.');
+            if ($hasMov) return back()->with('error','No se puede REEMPLAZAR: hay movimientos contables.');
             DB::table('cuenta_contable')->truncate();
         }
 
-        rewind($fh); // volver al inicio completo
-        // Saltar encabezado
-        fgetcsv($fh, 0, $delimiter);
+        rewind($fh);
+        fgetcsv($fh, 0, $delimiter); // Saltar encabezado
 
         while (($row = fgetcsv($fh, 0, $delimiter)) !== false) {
             $codigo = trim($row[$map['codigo']] ?? '');

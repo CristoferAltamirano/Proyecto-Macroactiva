@@ -8,8 +8,9 @@ use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
-use App\Http\Controllers\ResidenteLoginController; // <-- NUEVO
-use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ResidenteLoginController;
+use App\Http\Controllers\PlanCuentasController;
+use App\Http\Controllers\LibroController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,8 +35,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/cobros', [CobroController::class, 'index'])->name('cobros.index');
     Route::patch('/cobros/{cobro}/pagar', [CobroController::class, 'registrarPago'])->name('cobros.pagar');
 
-    Route::middleware(['role:super-admin'])->group(function () {
-        Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
+    // Rutas para Contabilidad
+    Route::prefix('contabilidad')->name('contabilidad.')->group(function () {
+        Route::resource('cuentas', PlanCuentasController::class);
+        Route::post('cuentas/import', [PlanCuentasController::class, 'importCsv'])->name('cuentas.import');
+        Route::get('cuentas/export', [PlanCuentasController::class, 'exportCsv'])->name('cuentas.export');
+        Route::get('libro', [LibroController::class, 'index'])->name('libro.index');
+        Route::get('libro/export', [LibroController::class, 'exportCsv'])->name('libro.export');
     });
 });
 
@@ -54,7 +60,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
-        // Aún no creamos esta ruta, pero ya la dejamos definida.
         Route::get('/dashboard', function () {
             return '¡Bienvenido al portal de residentes!';
         })->name('dashboard');
