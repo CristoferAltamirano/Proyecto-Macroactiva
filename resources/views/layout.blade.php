@@ -47,6 +47,11 @@
                         <i class="bi bi-journal-check me-2"></i> Revisión de Cobros
                     </a>
                 </li>
+                <li class="nav-item mb-1">
+                    <a href="{{ route('condominios.index') }}" class="nav-link text-white {{ request()->routeIs('condominios.*') ? 'active' : '' }}">
+                        <i class="bi bi-building me-2"></i> Condominios
+                    </a>
+                </li>
             </ul>
             <hr>
             @if(Auth::check() && Auth::user()->role === 'super-admin')

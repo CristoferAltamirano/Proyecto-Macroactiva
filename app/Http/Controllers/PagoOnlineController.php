@@ -13,15 +13,13 @@ class PagoOnlineController extends Controller
 {
     public function __construct()
     {
-        // Configura Transbank para usar las credenciales del .env
-        // El SDK moderno lo hace automáticamente, pero es una buena práctica asegurarse.
         if (config('app.env') === 'production') {
-            Transaction::configureForProduction(
+            (new Transaction)->configureForProduction(
                 config('services.transbank.webpay_plus_commerce_code'),
                 config('services.transbank.webpay_plus_api_key')
             );
         } else {
-            Transaction::configureForIntegration();
+            (new Transaction)->configureForIntegration(config('services.transbank.webpay_plus_commerce_code'), config('services.transbank.webpay_plus_api_key'));
         }
     }
 

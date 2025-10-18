@@ -14,6 +14,7 @@ class AdminUserController extends Controller
      */
     public function index()
     {
+        $this->authorize('super-admin');
         $users = User::all();
         return view('admin.users.index', compact('users'));
     }
@@ -23,6 +24,7 @@ class AdminUserController extends Controller
      */
     public function create()
     {
+        $this->authorize('super-admin');
         return view('admin.users.create');
     }
 
@@ -31,6 +33,7 @@ class AdminUserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('super-admin');
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -53,6 +56,7 @@ class AdminUserController extends Controller
      */
     public function edit(User $user)
     {
+        $this->authorize('super-admin');
         return view('admin.users.edit', compact('user'));
     }
 
@@ -61,6 +65,7 @@ class AdminUserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->authorize('super-admin');
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
@@ -83,6 +88,7 @@ class AdminUserController extends Controller
      */
     public function destroy(User $user)
     {
+        $this->authorize('super-admin');
         // Prevenir que un usuario se elimine a sí mismo
         if ($user->id === auth()->id()) {
             return back()->withErrors(['delete' => 'No puedes eliminar tu propio usuario.']);

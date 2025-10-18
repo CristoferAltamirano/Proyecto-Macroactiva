@@ -1,0 +1,27 @@
+<?php
+
+namespace Database\Factories;
+
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Pago>
+ */
+class PagoFactory extends Factory
+{
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'monto' => $this->faker->numberBetween(1000, 100000),
+            'fecha_pago' => $this->faker->date(),
+            'cobro_id' => \App\Models\Cobro::factory(),
+            'unidad_id' => \App\Models\Unidad::factory(),
+            'metodo_pago' => 'manual',
+        ];
+    }
+}

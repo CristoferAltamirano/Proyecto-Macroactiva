@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Condominio;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Configuracion;
 
 class ConfiguracionTest extends TestCase
 {
@@ -13,43 +13,43 @@ class ConfiguracionTest extends TestCase
 
     public function test_super_admin_can_access_configuracion_page()
     {
-        $superAdmin = User::factory()->create(['role' => 'super-admin']);
+        $superAdmin = User::factory()->create(['tipo_usuario' => 'super-admin']);
+        $condominio = Condominio::factory()->create();
         $this->actingAs($superAdmin);
 
-        $response = $this->get(route('configuracion.edit'));
+        $response = $this->get(route('condominios.edit', $condominio));
 
         $response->assertStatus(200);
-        $response->assertViewIs('configuracion.edit');
+        $response->assertViewIs('condominios.edit');
     }
 
     public function test_non_super_admin_cannot_access_configuracion_page()
     {
-        $user = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create(['tipo_usuario' => 'admin']);
+        $condominio = Condominio::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->get(route('configuracion.edit'));
+        $response = $this->get(route('condominios.edit', $condominio));
 
         $response->assertStatus(403);
     }
 
     public function test_super_admin_can_update_configuracion()
     {
-        $superAdmin = User::factory()->create(['role' => 'super-admin']);
+        $superAdmin = User::factory()->create(['tipo_usuario' => 'super-admin']);
+        $condominio = Condominio::factory()->create();
         $this->actingAs($superAdmin);
 
-        $response = $this->post(route('configuracion.update'), [
-            'fondo_reserva_porcentaje' => '12.5',
-            'interes_mora_mensual' => '2.0',
+        $response = $this->put(route('condominios.update', $condominio), [
+            'nombre' => 'New Name',
+            'direccion' => 'New Address',
         ]);
 
-        $response->assertRedirect(route('configuracion.edit'));
-        $this->assertDatabaseHas('configuraciones', [
-            'clave' => 'fondo_reserva_porcentaje',
-            'valor' => '12.5',
-        ]);
-        $this->assertDatabaseHas('configuraciones', [
-            'clave' => 'interes_mora_mensual',
-            'valor' => '2.0',
+        $response->assertRedirect(route('condominios.index'));
+        $this->assertDatabaseHas('condominios', [
+            'id' => $condominio->id,
+            'nombre' => 'New Name',
+            'direccion' => 'New Address',
         ]);
     }
 }
