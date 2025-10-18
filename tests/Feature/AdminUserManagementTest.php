@@ -16,8 +16,8 @@ class AdminUserManagementTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->superAdmin = User::factory()->create(['role' => 'super-admin']);
-        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->superAdmin = User::factory()->create(['tipo_usuario' => 'super-admin']);
+        $this->admin = User::factory()->create(['tipo_usuario' => 'admin']);
     }
 
     public function test_super_admin_can_access_user_management()
@@ -42,7 +42,7 @@ class AdminUserManagementTest extends TestCase
             'email' => 'nuevo@admin.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-            'role' => 'admin',
+            'tipo_usuario' => 'admin',
         ];
         $response = $this->post(route('users.store'), $userData);
         $response->assertRedirect(route('users.index'));
@@ -56,7 +56,7 @@ class AdminUserManagementTest extends TestCase
         $updatedData = [
             'name' => 'Nombre Actualizado',
             'email' => $userToEdit->email,
-            'role' => 'admin',
+            'tipo_usuario' => 'admin',
         ];
         $response = $this->put(route('users.update', $userToEdit), $updatedData);
         $response->assertRedirect(route('users.index'));

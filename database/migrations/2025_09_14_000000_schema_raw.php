@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\File;
 return new class extends Migration {
     public function up(): void
     {
-        $path = database_path('sql/schema.sql');
+        $path = database_path('sql/schema.sqlite.sql');
         if (!File::exists($path)) throw new RuntimeException("Falta database/sql/schema.sql");
         DB::unprepared(File::get($path));
     }

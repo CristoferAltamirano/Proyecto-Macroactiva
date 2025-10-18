@@ -14,6 +14,7 @@ use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PagoOnlineController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\PortalResidenteController;
+use App\Http\Controllers\CondominioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,8 +49,11 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rutas de Super Admin
-    Route::middleware('role:super-admin')->group(function () {
+    Route::middleware(['can:super-admin'])->group(function () {
         Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
+        Route::resource('condominios', CondominioController::class);
+        Route::get('configuracion', [CondominioController::class, 'edit'])->name('configuracion.edit');
+        Route::post('configuracion', [CondominioController::class, 'update'])->name('configuracion.update');
     });
 });
 

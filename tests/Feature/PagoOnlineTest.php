@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Cobro;
 use App\Models\Unidad;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -19,26 +20,27 @@ class PagoOnlineTest extends TestCase
         // Mock de la transacción de Webpay para no hacer llamadas reales
         $this->mock(Transaction::class, function ($mock) {
             $mock->shouldReceive('create')->andReturn((object)[
-                'token' => 'mock_token_123',
-                'url' => 'https://mock.webpay.cl/payment',
+                'getToken' => 'mock_token_123',
+                'getUrl' => 'https://mock.webpay.cl/payment',
             ]);
             $mock->shouldReceive('commit')->with('mock_token_123')->andReturn((object)[
                 'isApproved' => true,
-                'response_code' => 0,
+                'getResponseCode' => 0,
             ]);
             $mock->shouldReceive('commit')->with('mock_token_rechazado')->andReturn((object)[
                 'isApproved' => false,
-                'response_code' => -1,
+                'getResponseCode' => -1,
             ]);
         });
     }
 
     public function test_residente_can_initiate_webpay_payment()
     {
-        $residente = Unidad::factory()->create();
-        $cobro = Cobro::factory()->create(['unidad_id' => $residente->id, 'estado' => 'pendiente']);
+        $user = User::factory()->create(['tipo_usuario' => 'residente']);
+        $unidad = Unidad::factory()->create(['residente_id' => $user->id]);
+        $cobro = Cobro::factory()->create(['unidad_id' => $unidad->id, 'estado' => 'pendiente']);
 
-        $this->actingAs($residente, 'residente');
+        $this->actingAs($user, 'residente');
 
         $response = $this->post(route('portal.pago.iniciar', $cobro));
 

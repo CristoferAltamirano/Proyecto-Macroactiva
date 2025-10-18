@@ -5,17 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Gasto extends Model
+class Condominio extends Model
 {
     use HasFactory;
 
-    protected $table = 'gastos';
-
     protected $fillable = [
-        'descripcion',
-        'monto',
-        'tipo',
-        'fecha_gasto',
-        'periodo_gasto',
+        'nombre',
+        'direccion',
+        'telefono',
+        'correo_electronico',
+        'administrador',
     ];
 }

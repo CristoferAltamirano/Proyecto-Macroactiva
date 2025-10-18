@@ -16,13 +16,14 @@ class RoleMiddleware
      * @param  string[]  ...$roles
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle(Request $request, Closure $next, $roles)
     {
         if (!Auth::check()) {
             return redirect('login');
         }
 
         $user = Auth::user();
+        $roles = explode('|', $roles);
 
         foreach ($roles as $role) {
             // Si el usuario tiene el rol, permite el acceso.

@@ -7,6 +7,8 @@ use App\Models\Gasto;
 use App\Models\Pago;
 use App\Models\Unidad;
 use App\Services\ContabilidadService;
+use App\Models\Condominio;
+use App\Models\Grupo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -30,7 +32,9 @@ class ContabilidadTest extends TestCase
 
     public function test_contabilidad_service_registers_generacion_cobros()
     {
-        $unidad = Unidad::factory()->create();
+        $condominio = Condominio::factory()->create();
+        $grupo = Grupo::factory()->create(['condominio_id' => $condominio->id]);
+        $unidad = Unidad::factory()->create(['id_grupo' => $grupo->id]);
         $cobros = Cobro::factory()->count(3)->create(['unidad_id' => $unidad->id, 'monto_total' => 10000]);
         $idCondominio = $unidad->grupo->id_condominio;
 
