@@ -64,7 +64,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         
-        // 👇 Esta es la línea que añadimos para nuestro "guardia" de roles 👇
-        'role' => \App\Http\Middleware\CheckRole::class,
+        // Middleware para verificar roles de usuario
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
     ];
 }
