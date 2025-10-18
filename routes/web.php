@@ -11,6 +11,7 @@ use App\Http\Controllers\CobroController;
 use App\Http\Controllers\ResidenteLoginController;
 use App\Http\Controllers\PlanCuentasController;
 use App\Http\Controllers\LibroController;
+use App\Http\Controllers\PagoOnlineController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,8 +61,14 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
     // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
-        Route::get('/dashboard', function () {
-            return '¡Bienvenido al portal de residentes!';
-        })->name('dashboard');
+        Route::get('/dashboard', [App\Http\Controllers\PortalResidenteController::class, 'dashboard'])->name('dashboard');
+        Route::get('/cobro/{cobro}', [App\Http\Controllers\PortalResidenteController::class, 'showCobro'])->name('cobro.show');
+        Route::get('/cobro/{cobro}/pdf', [App\Http\Controllers\PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
+
+        // Rutas para Pagos Online
+        Route::post('/pago/iniciar/{cobro}', [PagoOnlineController::class, 'iniciar'])->name('pago.iniciar');
     });
+
+    // Ruta de confirmación de Webpay (puede ser visitada sin sesión activa)
+    Route::get('/pago/confirmar', [PagoOnlineController::class, 'confirmar'])->name('pago.confirmar');
 });
