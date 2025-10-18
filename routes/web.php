@@ -48,7 +48,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rutas de Super Admin
-    Route::middleware('role:super-admin')->group(function () {
+    Route::middleware(\App\Http\Middleware\RoleMiddleware::class . ':super-admin')->group(function () {
         Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
     });
 });
