@@ -53,12 +53,4 @@ class Unidad extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    /**
-     * Define la relación: Una Unidad tiene muchos Cobros.
-     */
-    public function cobros(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(\App\Models\Cobro::class, 'unidad_id');
-    }
 }
