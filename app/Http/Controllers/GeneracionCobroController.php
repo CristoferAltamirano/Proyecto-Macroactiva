@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cobro;
 use App\Models\Gasto;
 use App\Models\Unidad;
+use App\Services\ContabilidadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -47,11 +48,12 @@ class GeneracionCobroController extends Controller
         }
 
         // 5. ¡La Magia! Recorremos cada unidad y creamos su cobro.
+        $cobrosGenerados = collect();
         foreach ($unidadesActivas as $unidad) {
             $montoGastoComunUnidad = $totalGastosOrdinarios * $unidad->prorrateo;
             $montoFondoReservaUnidad = $montoFondoReservaTotal * $unidad->prorrateo;
 
-            Cobro::create([
+            $cobro = Cobro::create([
                 'unidad_id' => $unidad->id,
                 'periodo' => $periodo,
                 'monto_gasto_comun' => round($montoGastoComunUnidad),
@@ -59,6 +61,15 @@ class GeneracionCobroController extends Controller
                 'monto_total' => round($montoGastoComunUnidad + $montoFondoReservaUnidad), // Sumaremos multas después
                 'estado' => 'pendiente',
             ]);
+            $cobrosGenerados->push($cobro);
+        }
+
+        // 6. Registrar el asiento contable para la generación masiva
+        if ($cobrosGenerados->isNotEmpty()) {
+            // Asumimos que todos los cobros de un lote son del mismo condominio.
+            // Una mejora futura sería agrupar por condominio si la app es multi-condominio.
+            $idCondominio = $unidadesActivas->first()->grupo->id_condominio;
+            (new ContabilidadService())->registrarGeneracionCobros($cobrosGenerados, $idCondominio);
         }
 
         // 6. Redirección con mensaje de éxito.
