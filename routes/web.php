@@ -12,6 +12,8 @@ use App\Http\Controllers\ResidenteLoginController;
 use App\Http\Controllers\PlanCuentasController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PagoOnlineController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\PortalResidenteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +46,11 @@ Route::middleware('auth')->group(function () {
         Route::get('libro', [LibroController::class, 'index'])->name('libro.index');
         Route::get('libro/export', [LibroController::class, 'exportCsv'])->name('libro.export');
     });
+
+    // Rutas de Super Admin
+    Route::middleware(['role:super-admin'])->group(function () {
+        Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
+    });
 });
 
 /*
@@ -52,23 +59,16 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('portal')->name('portal.')->group(function () {
-    // Muestra el formulario de login del residente
     Route::get('/login', [ResidenteLoginController::class, 'showLoginForm'])->name('login');
-    // Procesa el login del residente
     Route::post('/login', [ResidenteLoginController::class, 'login'])->name('login.submit');
-    // Cierra la sesión del residente
     Route::post('/logout', [ResidenteLoginController::class, 'logout'])->name('logout');
 
-    // Rutas protegidas para residentes logueados
     Route::middleware('auth:residente')->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\PortalResidenteController::class, 'dashboard'])->name('dashboard');
-        Route::get('/cobro/{cobro}', [App\Http\Controllers\PortalResidenteController::class, 'showCobro'])->name('cobro.show');
-        Route::get('/cobro/{cobro}/pdf', [App\Http\Controllers\PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
-
-        // Rutas para Pagos Online
+        Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
+        Route::get('/cobro/{cobro}', [PortalResidenteController::class, 'showCobro'])->name('cobro.show');
+        Route::get('/cobro/{cobro}/pdf', [PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
         Route::post('/pago/iniciar/{cobro}', [PagoOnlineController::class, 'iniciar'])->name('pago.iniciar');
     });
 
-    // Ruta de confirmación de Webpay (puede ser visitada sin sesión activa)
     Route::get('/pago/confirmar', [PagoOnlineController::class, 'confirmar'])->name('pago.confirmar');
 });
