@@ -16,6 +16,7 @@ class Pago extends Model
         'monto',
         'fecha_pago',
         'metodo_pago',
+        'webpay_token',
     ];
 
     protected $casts = [
