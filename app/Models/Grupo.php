@@ -9,9 +9,16 @@ class Grupo extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'nombre',
-        'tipo',
-        'condominio_id',
-    ];
+    protected $primaryKey = 'id_grupo';
+    protected $fillable = ['nombre', 'id_condominio', 'tipo'];
+
+    public function condominio()
+    {
+        return $this->belongsTo(Condominio::class, 'id_condominio', 'id_condominio');
+    }
+
+    public function unidades()
+    {
+        return $this->hasMany(Unidad::class, 'id_grupo', 'id_grupo');
+    }
 }

@@ -10,18 +10,19 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('gastos', function (Blueprint $table) {
-        $table->id();
-        $table->string('descripcion');
-        $table->unsignedInteger('monto');
-        $table->enum('tipo', ['ordinario', 'extraordinario'])->default('ordinario');
-        $table->date('fecha_gasto');
-        $table->date('periodo_gasto'); // Primer día del mes al que corresponde el gasto. Ej: 2025-10-01
-        $table->string('documento_path')->nullable(); // Para guardar la ruta a una boleta/factura
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('gastos', function (Blueprint $table) {
+            $table->bigIncrements('id_gasto');
+            $table->unsignedBigInteger('condominio_id');
+            $table->string('periodo');
+            $table->unsignedBigInteger('id_gasto_categ');
+            $table->integer('neto')->default(0);
+            $table->integer('iva')->default(0);
+            $table->text('descripcion')->nullable();
+            $table->timestamp('fecha_emision')->nullable();
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -5,22 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Cobro;
 use App\Models\Pago;
 use App\Services\ContabilidadService;
+use App\Services\WebpayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Transbank\Webpay\WebpayPlus\Transaction;
 
 class PagoOnlineController extends Controller
 {
-    public function __construct()
+    protected $webpayService;
+    protected $contabilidadService;
+
+    public function __construct(WebpayService $webpayService, ContabilidadService $contabilidadService)
     {
-        if (config('app.env') === 'production') {
-            (new Transaction)->configureForProduction(
-                config('services.transbank.webpay_plus_commerce_code'),
-                config('services.transbank.webpay_plus_api_key')
-            );
-        } else {
-            (new Transaction)->configureForIntegration(config('services.transbank.webpay_plus_commerce_code'), config('services.transbank.webpay_plus_api_key'));
-        }
+        $this->webpayService = $webpayService;
+        $this->contabilidadService = $contabilidadService;
     }
 
     /**
@@ -30,38 +27,36 @@ class PagoOnlineController extends Controller
     {
         $residente = auth()->guard('residente')->user();
 
-        // Seguridad: Verificar que el cobro pertenece al residente
         if ($cobro->unidad_id !== $residente->id) {
             abort(403, 'Acceso no autorizado.');
         }
 
-        // Crear un registro de pago PENDIENTE
         $pago = Pago::create([
             'cobro_id' => $cobro->id,
             'unidad_id' => $residente->id,
-            'monto' => $cobro->monto_total,
+            'monto_pagado' => $cobro->monto_total,
             'fecha_pago' => now(),
             'metodo_pago' => 'webpay_pendiente',
         ]);
 
-        $buyOrder = 'PAGO_' . $pago->id;
-        $sessionId = session()->getId();
-        $amount = $pago->monto;
-        $returnUrl = route('portal.pago.confirmar');
-
         try {
-            $response = (new Transaction)->create($buyOrder, $sessionId, $amount, $returnUrl);
+            $redirectUrl = $this->webpayService->startTransaction($cobro);
 
-            // Guardar el token para la verificación
-            $pago->webpay_token = $response->getToken();
-            $pago->save();
+            // Extraer token de la URL mock para guardar
+            if (config('webpay.mock')) {
+                parse_str(parse_url($redirectUrl, PHP_URL_QUERY), $queryParams);
+                $token = $queryParams['token_ws'] ?? null;
+                if ($token) {
+                    $pago->webpay_token = $token;
+                    $pago->save();
+                }
+            }
 
-            // Redirigir al usuario al portal de pagos de Webpay
-            return redirect($response->getUrl() . '?token_ws=' . $response->getToken());
+            return redirect($redirectUrl);
 
         } catch (\Exception $e) {
             Log::error("Error al iniciar pago con Webpay: " . $e->getMessage());
-            $pago->delete(); // Eliminar el intento de pago fallido
+            $pago->delete();
             return redirect()->route('portal.cobro.show', $cobro->id)
                              ->with('error', 'No se pudo iniciar el proceso de pago. Por favor, intenta de nuevo.');
         }
@@ -75,30 +70,22 @@ class PagoOnlineController extends Controller
         $token = $request->input('token_ws');
 
         if (!$token) {
-            // El usuario canceló el pago en el portal de Webpay
             return redirect()->route('portal.dashboard')->with('error', 'El pago fue cancelado.');
         }
 
         try {
-            $response = (new Transaction)->commit($token);
             $pago = Pago::where('webpay_token', $token)->firstOrFail();
+            $result = $this->webpayService->confirmTransaction($token);
 
-            if ($response->isApproved()) {
-                // Pago APROBADO
+            if ($result['status'] === 'approved') {
                 $pago->update(['metodo_pago' => 'webpay_exitoso']);
-
-                // Actualizar el estado del cobro asociado
                 $pago->cobro->update(['estado' => 'pagado']);
-
-                // Registrar en la contabilidad
-                (new ContabilidadService())->registrarPago($pago);
-
+                $this->contabilidadService->registrarPago($pago, $pago->cobro->unidad->grupo->condominio_id);
                 return redirect()->route('portal.dashboard')->with('success', '¡Tu pago ha sido procesado exitosamente!');
             } else {
-                // Pago RECHAZADO
                 $pago->update(['metodo_pago' => 'webpay_rechazado']);
                 return redirect()->route('portal.cobro.show', $pago->cobro_id)
-                                 ->with('error', 'El pago fue rechazado por el banco. Por favor, intenta con otro método.');
+                                 ->with('error', 'Tu pago fue rechazado. Intenta nuevamente.');
             }
 
         } catch (\Exception $e) {

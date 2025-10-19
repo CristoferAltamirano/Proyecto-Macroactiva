@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('condominios', function (Blueprint $table) {
-            $table->id();
-            $table->string('nombre');
-            $table->string('direccion');
-            $table->string('telefono')->nullable();
-            $table->string('correo_electronico')->nullable();
-            $table->string('administrador')->nullable();
+        Schema::create('cuenta_contable', function (Blueprint $table) {
+            $table->id('id_cta_contable');
+            $table->string('codigo', 20)->unique();
+            $table->string('nombre', 100);
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('condominios');
+        Schema::dropIfExists('cuenta_contable');
     }
 };

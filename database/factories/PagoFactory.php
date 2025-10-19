@@ -16,12 +16,24 @@ class PagoFactory extends Factory
      */
     public function definition(): array
     {
+        $unidad = \App\Models\Unidad::factory()->create();
+        $cobro = \App\Models\Cobro::factory()->create(['id_unidad' => $unidad->id_unidad]);
+
         return [
-            'monto' => $this->faker->numberBetween(1000, 100000),
-            'fecha_pago' => $this->faker->date(),
-            'cobro_id' => \App\Models\Cobro::factory(),
-            'unidad_id' => \App\Models\Unidad::factory(),
-            'metodo_pago' => 'manual',
+            'monto_pagado' => $this->faker->numberBetween(1000, 100000),
+            'fecha_pago' => $this->faker->dateTime(),
+            'cobro_id' => $cobro->id_cobro,
+            'id_unidad' => $unidad->id_unidad,
         ];
+    }
+
+    public function forCobro(\App\Models\Cobro $cobro)
+    {
+        return $this->state(function (array $attributes) use ($cobro) {
+            return [
+                'cobro_id' => $cobro->id_cobro,
+                'id_unidad' => $cobro->id_unidad,
+            ];
+        });
     }
 }

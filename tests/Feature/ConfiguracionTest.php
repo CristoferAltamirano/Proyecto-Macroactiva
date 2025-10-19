@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Condominio;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use App\Models\User;
+use App\Models\Configuracion;
+use App\Models\Condominio;
 
 class ConfiguracionTest extends TestCase
 {
@@ -14,20 +15,20 @@ class ConfiguracionTest extends TestCase
     public function test_super_admin_can_access_configuracion_page()
     {
         $superAdmin = User::factory()->create(['tipo_usuario' => 'super-admin']);
-        $condominio = Condominio::factory()->create();
         $this->actingAs($superAdmin);
+        $condominio = Condominio::factory()->create();
 
         $response = $this->get(route('condominios.edit', $condominio));
 
         $response->assertStatus(200);
-        $response->assertViewIs('condominios.edit');
+        $response->assertViewIs('admin.condominios.edit');
     }
 
     public function test_non_super_admin_cannot_access_configuracion_page()
     {
         $user = User::factory()->create(['tipo_usuario' => 'admin']);
-        $condominio = Condominio::factory()->create();
         $this->actingAs($user);
+        $condominio = Condominio::factory()->create();
 
         $response = $this->get(route('condominios.edit', $condominio));
 
@@ -37,19 +38,18 @@ class ConfiguracionTest extends TestCase
     public function test_super_admin_can_update_configuracion()
     {
         $superAdmin = User::factory()->create(['tipo_usuario' => 'super-admin']);
-        $condominio = Condominio::factory()->create();
         $this->actingAs($superAdmin);
+        $condominio = Condominio::factory()->create();
 
         $response = $this->put(route('condominios.update', $condominio), [
-            'nombre' => 'New Name',
-            'direccion' => 'New Address',
+            'nombre' => 'Condominio Actualizado',
+            'direccion' => 'Nueva Direccion',
         ]);
 
         $response->assertRedirect(route('condominios.index'));
         $this->assertDatabaseHas('condominios', [
-            'id' => $condominio->id,
-            'nombre' => 'New Name',
-            'direccion' => 'New Address',
+            'id_condominio' => $condominio->id_condominio,
+            'nombre' => 'Condominio Actualizado',
         ]);
     }
 }

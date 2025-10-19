@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         
         // Middleware para verificar roles de usuario
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
     ];
 }

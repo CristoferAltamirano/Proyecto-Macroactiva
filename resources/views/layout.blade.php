@@ -50,6 +50,7 @@
                     </a>
                 </li>
 
+                {{-- Submenú Reportes --}}
                 <li class="nav-item mb-1">
                     <a href="#submenu-reportes" data-bs-toggle="collapse" class="nav-link text-white {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
                         <i class="bi bi-graph-up-arrow me-2"></i> Reportes
@@ -66,7 +67,7 @@
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
-                    <strong>{{ Auth::user()->name }}</strong>
+                    <strong>{{ auth()->check() ? auth()->user()->name : 'Usuario' }}</strong>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
                     <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
@@ -97,7 +98,7 @@
             @endif
             @yield('content')
         </div>
-        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

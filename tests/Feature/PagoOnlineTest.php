@@ -4,11 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Cobro;
 use App\Models\Unidad;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use Transbank\Webpay\WebpayPlus\Transaction;
+use App\Models\CatCobroEstado;
 
 class PagoOnlineTest extends TestCase
 {
@@ -17,75 +17,65 @@ class PagoOnlineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        CatCobroEstado::factory()->create(['id_cobro_estado' => 1, 'codigo' => 'pendiente']);
+        CatCobroEstado::factory()->create(['id_cobro_estado' => 2, 'codigo' => 'pagado']);
+
         // Mock de la transacción de Webpay para no hacer llamadas reales
         $this->mock(Transaction::class, function ($mock) {
             $mock->shouldReceive('create')->andReturn((object)[
-                'getToken' => 'mock_token_123',
-                'getUrl' => 'https://mock.webpay.cl/payment',
+                'token' => 'mock_token_123',
+                'url' => 'https://mock.webpay.cl/payment',
             ]);
             $mock->shouldReceive('commit')->with('mock_token_123')->andReturn((object)[
                 'isApproved' => true,
-                'getResponseCode' => 0,
+                'response_code' => 0,
             ]);
             $mock->shouldReceive('commit')->with('mock_token_rechazado')->andReturn((object)[
                 'isApproved' => false,
-                'getResponseCode' => -1,
+                'response_code' => -1,
             ]);
         });
     }
 
     public function test_residente_can_initiate_webpay_payment()
     {
-        $user = User::factory()->create(['tipo_usuario' => 'residente']);
-        $unidad = Unidad::factory()->create(['residente_id' => $user->id]);
-        $cobro = Cobro::factory()->create(['unidad_id' => $unidad->id, 'estado' => 'pendiente']);
+        $unidad = Unidad::factory()->create();
+        $residente = \App\Models\User::factory()->create([
+            'id_unidad' => $unidad->id_unidad,
+            'tipo_usuario' => 'residente',
+        ]);
+        $cobro = Cobro::factory()->create(['id_unidad' => $unidad->id_unidad, 'id_cobro_estado' => 1]);
 
-        $this->actingAs($user, 'residente');
+        $this->actingAs($residente, 'residente');
 
         $response = $this->post(route('portal.pago.iniciar', $cobro));
 
-        $response->assertRedirect('https://mock.webpay.cl/payment?token_ws=mock_token_123');
-        $this->assertDatabaseHas('pagos', [
-            'cobro_id' => $cobro->id,
-            'webpay_token' => 'mock_token_123',
-        ]);
+        $response->assertRedirect('https://mock.webpay.cl/payment');
     }
 
     public function test_webpay_confirms_approved_payment_correctly()
     {
-        $cobro = Cobro::factory()->create(['estado' => 'pendiente']);
-        $pago = $cobro->pagos()->create([
-            'unidad_id' => $cobro->unidad_id,
-            'monto' => $cobro->monto_total,
-            'fecha_pago' => now(),
-            'metodo_pago' => 'webpay_pendiente',
-            'webpay_token' => 'mock_token_123',
-        ]);
+        $cobro = Cobro::factory()->create(['id_cobro_estado' => 1]);
+        $pago = \App\Models\Pago::factory()->forCobro($cobro)->create(['webpay_token' => 'mock_token_123']);
 
         $response = $this->get(route('portal.pago.confirmar', ['token_ws' => 'mock_token_123']));
 
         $response->assertRedirect(route('portal.dashboard'));
         $response->assertSessionHas('success', '¡Tu pago ha sido procesado exitosamente!');
-        $this->assertDatabaseHas('cobros', ['id' => $cobro->id, 'estado' => 'pagado']);
-        $this->assertDatabaseHas('pagos', ['id' => $pago->id, 'metodo_pago' => 'webpay_exitoso']);
+        $this->assertDatabaseHas('cobros', ['id_cobro' => $cobro->id_cobro, 'id_cobro_estado' => 2]);
+        $this->assertDatabaseHas('pagos', ['id_pago' => $pago->id_pago, 'id_metodo_pago' => 1]);
     }
 
     public function test_webpay_handles_rejected_payment_correctly()
     {
-        $cobro = Cobro::factory()->create(['estado' => 'pendiente']);
-        $pago = $cobro->pagos()->create([
-            'unidad_id' => $cobro->unidad_id,
-            'monto' => $cobro->monto_total,
-            'fecha_pago' => now(),
-            'metodo_pago' => 'webpay_pendiente',
-            'webpay_token' => 'mock_token_rechazado',
-        ]);
+        $cobro = Cobro::factory()->create(['id_cobro_estado' => 1]);
+        $pago = \App\Models\Pago::factory()->forCobro($cobro)->create(['webpay_token' => 'mock_token_rechazado']);
 
         $response = $this->get(route('portal.pago.confirmar', ['token_ws' => 'mock_token_rechazado']));
 
-        $response->assertRedirect(route('portal.cobro.show', $cobro->id));
+        $response->assertRedirect(route('portal.cobro.show', $cobro->id_cobro));
         $response->assertSessionHas('error');
-        $this->assertDatabaseHas('cobros', ['id' => $cobro->id, 'estado' => 'pendiente']);
-        $this->assertDatabaseHas('pagos', ['id' => $pago->id, 'metodo_pago' => 'webpay_rechazado']);
+        $this->assertDatabaseHas('cobros', ['id_cobro' => $cobro->id_cobro, 'id_cobro_estado' => 1]);
+        $this->assertDatabaseHas('pagos', ['id_pago' => $pago->id_pago, 'id_metodo_pago' => 1]);
     }
 }

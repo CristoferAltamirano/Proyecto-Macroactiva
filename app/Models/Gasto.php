@@ -9,29 +9,25 @@ class Gasto extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    // Si tu PK real es 'id', elimina esta línea. Si es 'id_gasto', déjala.
+    protected $primaryKey = 'id_gasto';
+
     protected $fillable = [
+        'condominio_id',
+        'periodo',
+        'id_gasto_categ',
+        'neto',
+        'iva',
         'descripcion',
-        'monto',
-        'tipo',
-        'fecha_gasto',
-        'periodo_gasto',
-        'documento_path',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        // 👇 ESTA ES LA LÍNEA QUE ARREGLA TODO 👇
-        // Le decimos a Laravel que estas columnas son de tipo 'date'.
-        'fecha_gasto' => 'date',
-        'periodo_gasto' => 'date',
+        'fecha_emision' => 'date',
+        'fecha_venc' => 'date',
     ];
+
+    public function getTotalAttribute()
+    {
+        return round(($this->attributes['neto'] ?? 0) + ($this->attributes['iva'] ?? 0), 2);
+    }
 }

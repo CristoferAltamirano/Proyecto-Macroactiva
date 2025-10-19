@@ -9,11 +9,19 @@ class Pago extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id_pago';
+
     protected $fillable = [
-        'monto',
-        'fecha_pago',
         'cobro_id',
-        'unidad_id',
-        'metodo_pago',
+        'id_unidad',
+        'monto_pagado',
+        'fecha_pago',
+        'id_metodo_pago',
+        'webpay_token',
     ];
+
+    public function cobro()
+    {
+        return $this->belongsTo(Cobro::class, 'cobro_id', 'id_cobro');
+    }
 }

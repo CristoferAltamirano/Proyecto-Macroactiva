@@ -2,23 +2,17 @@
 
 namespace Database\Factories;
 
+use App\Models\Condominio;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Condominio>
- */
 class CondominioFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Condominio::class;
+
     public function definition(): array
     {
         return [
-            'nombre' => $this->faker->company,
-            'direccion' => $this->faker->address,
+            'nombre' => 'Condominio '.$this->faker->company,
         ];
     }
 }

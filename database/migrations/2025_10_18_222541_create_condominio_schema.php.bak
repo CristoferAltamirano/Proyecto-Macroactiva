@@ -1,0 +1,520 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('cat_tipo_cuenta', function (Blueprint $table) {
+            $table->tinyIncrements('id_tipo_cuenta');
+            $table->string('codigo', 20)->unique();
+        });
+
+        Schema::create('cat_doc_tipo', function (Blueprint $table) {
+            $table->tinyIncrements('id_doc_tipo');
+            $table->string('codigo', 20)->unique();
+        });
+
+        Schema::create('gasto_categoria', function (Blueprint $table) {
+            $table->smallIncrements('id_gasto_categ');
+            $table->string('nombre', 60)->unique();
+            $table->timestamps();
+        });
+
+        Schema::create('cat_metodo_pago', function (Blueprint $table) {
+            $table->tinyIncrements('id_metodo_pago');
+            $table->string('codigo', 30)->unique();
+            $table->string('nombre', 60);
+        });
+
+        Schema::create('cat_pasarela', function (Blueprint $table) {
+            $table->tinyIncrements('id_pasarela');
+            $table->string('codigo', 30)->unique();
+        });
+
+        Schema::create('cat_estado_tx', function (Blueprint $table) {
+            $table->tinyIncrements('id_estado_tx');
+            $table->string('codigo', 30)->unique();
+        });
+
+        Schema::create('cat_segmento', function (Blueprint $table) {
+            $table->tinyIncrements('id_segmento');
+            $table->string('codigo', 20)->unique();
+            $table->string('nombre', 60);
+        });
+
+        Schema::create('cat_unidad_tipo', function (Blueprint $table) {
+            $table->tinyIncrements('id_unidad_tipo');
+            $table->string('codigo', 20)->unique();
+            $table->string('nombre', 60);
+        });
+
+        Schema::create('cat_vivienda_subtipo', function (Blueprint $table) {
+            $table->tinyIncrements('id_viv_subtipo');
+            $table->string('codigo', 30)->unique();
+            $table->string('nombre', 60);
+        });
+
+        Schema::create('cat_cobro_estado', function (Blueprint $table) {
+            $table->tinyIncrements('id_cobro_estado');
+            $table->string('codigo', 20)->unique();
+        });
+
+        Schema::create('cat_concepto_cargo', function (Blueprint $table) {
+            $table->tinyIncrements('id_concepto_cargo');
+            $table->string('codigo', 30)->unique();
+            $table->string('nombre', 60)->nullable();
+        });
+
+        Schema::create('condominios', function (Blueprint $table) {
+            $table->id('id_condominio');
+            $table->string('nombre', 120)->unique();
+            $table->integer('rut_base')->nullable();
+            $table->char('rut_dv', 1)->nullable();
+            $table->string('direccion', 200)->nullable();
+            $table->string('comuna', 80)->nullable();
+            $table->string('region', 80)->nullable();
+            $table->string('email_contacto', 120)->nullable();
+            $table->string('telefono', 40)->nullable();
+            $table->string('banco', 80)->nullable();
+            $table->unsignedTinyInteger('id_tipo_cuenta')->nullable();
+            $table->string('num_cuenta', 40)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_tipo_cuenta')->references('id_tipo_cuenta')->on('cat_tipo_cuenta')->onDelete('set null');
+        });
+
+        Schema::create('condominio_anexo_regla', function (Blueprint $table) {
+            $table->id('id_regla');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio')->onDelete('cascade');
+            $table->unsignedTinyInteger('id_viv_subtipo')->nullable();
+            $table->enum('anexo_tipo', ['bodega', 'estacionamiento']);
+            $table->tinyInteger('incluido_qty')->default(0);
+            $table->boolean('cobrable_por_sobre_qty')->default(true);
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->string('comentario', 200)->nullable();
+
+            $table->foreign('id_viv_subtipo')->references('id_viv_subtipo')->on('cat_vivienda_subtipo');
+        });
+
+        Schema::create('grupos', function (Blueprint $table) {
+            $table->id('id_grupo');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->string('nombre', 80);
+            $table->string('tipo', 45);
+            $table->timestamps();
+
+            $table->unique(['id_condominio', 'nombre']);
+        });
+
+        Schema::create('unidades', function (Blueprint $table) {
+            $table->id('id_unidad');
+            $table->foreignId('id_grupo')->nullable()->constrained('grupos', 'id_grupo')->onDelete('set null');
+            $table->string('codigo', 40);
+            $table->string('direccion', 200)->nullable();
+            $table->unsignedTinyInteger('id_unidad_tipo')->nullable();
+            $table->unsignedTinyInteger('id_viv_subtipo')->nullable();
+            $table->unsignedTinyInteger('id_segmento')->nullable();
+            $table->boolean('anexo_incluido')->default(false);
+            $table->boolean('anexo_cobrable')->default(false);
+            $table->string('rol_sii', 40)->nullable();
+            $table->decimal('metros2', 10, 2)->nullable();
+            $table->decimal('coef_prop', 8, 6);
+            $table->boolean('habitable')->default(true);
+            $table->string('password')->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_grupo', 'codigo']);
+            $table->foreign('id_unidad_tipo')->references('id_unidad_tipo')->on('cat_unidad_tipo')->onDelete('set null');
+            $table->foreign('id_viv_subtipo')->references('id_viv_subtipo')->on('cat_vivienda_subtipo');
+            $table->foreign('id_segmento')->references('id_segmento')->on('cat_segmento')->onDelete('set null');
+        });
+
+        Schema::create('usuario_admin_condo', function (Blueprint $table) {
+            $table->foreignId('id_usuario')->constrained('users', 'id_usuario')->onDelete('cascade');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio')->onDelete('cascade');
+            $table->primary(['id_usuario', 'id_condominio']);
+        });
+
+        Schema::create('copropietarios', function (Blueprint $table) {
+            $table->id('id_coprop');
+            $table->foreignId('id_usuario')->constrained('users', 'id_usuario');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad');
+            $table->decimal('porcentaje', 6, 3);
+            $table->date('desde');
+            $table->date('hasta')->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_unidad', 'id_usuario', 'desde']);
+        });
+
+        Schema::create('residencias', function (Blueprint $table) {
+            $table->id('id_residencia');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad')->onDelete('cascade');
+            $table->foreignId('id_usuario')->constrained('users', 'id_usuario')->onDelete('cascade');
+            $table->enum('origen', ['propietario', 'arrendatario']);
+            $table->date('desde');
+            $table->date('hasta')->nullable();
+            $table->string('observacion', 200)->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_unidad', 'id_usuario', 'desde']);
+        });
+
+        Schema::create('proveedores', function (Blueprint $table) {
+            $table->id('id_proveedor');
+            $table->enum('tipo', ['persona', 'empresa'])->default('empresa');
+            $table->integer('rut_base');
+            $table->char('rut_dv', 1);
+            $table->string('nombre', 140);
+            $table->string('giro', 140)->nullable();
+            $table->string('email', 120)->nullable();
+            $table->string('telefono', 40)->nullable();
+            $table->timestamps();
+
+            $table->unique(['rut_base', 'rut_dv']);
+        });
+
+        Schema::create('cuenta_contable', function (Blueprint $table) {
+            $table->smallIncrements('id_cta_contable');
+            $table->string('codigo', 40)->unique();
+            $table->string('nombre', 80);
+            $table->timestamps();
+        });
+
+        Schema::create('param_reglamento', function (Blueprint $table) {
+            $table->foreignId('id_condominio')->primary()->constrained('condominios', 'id_condominio');
+            $table->decimal('recargo_fondo_reserva_pct', 5, 2)->default(5.00);
+            $table->decimal('interes_mora_anual_pct', 6, 3)->nullable();
+            $table->tinyInteger('dias_gracia')->default(0);
+            $table->decimal('multa_morosidad_fija', 12, 2)->nullable();
+        });
+
+        Schema::create('interes_regla', function (Blueprint $table) {
+            $table->id('id_interes_regla');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->unsignedTinyInteger('id_segmento');
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->decimal('tasa_anual_pct', 6, 3);
+            $table->tinyInteger('dias_gracia')->default(0);
+            $table->string('fuente_url', 300)->nullable();
+            $table->string('comentario', 300)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_segmento')->references('id_segmento')->on('cat_segmento');
+        });
+
+        Schema::create('prorrateo_regla', function (Blueprint $table) {
+            $table->id('id_prorrateo');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->unsignedTinyInteger('id_concepto_cargo');
+            $table->enum('tipo', ['ordinario', 'extra', 'especial'])->default('ordinario');
+            $table->enum('criterio', ['coef_prop', 'por_m2', 'igualitario', 'por_tipo', 'monto_fijo']);
+            $table->decimal('monto_total', 14, 2)->nullable();
+            $table->decimal('peso_vivienda', 10, 6)->nullable();
+            $table->decimal('peso_bodega', 10, 6)->nullable();
+            $table->decimal('peso_estacionamiento', 10, 6)->nullable();
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->string('descripcion', 300)->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_condominio', 'id_concepto_cargo', 'vigente_desde', 'tipo']);
+            $table->foreign('id_concepto_cargo')->references('id_concepto_cargo')->on('cat_concepto_cargo');
+        });
+
+        Schema::create('prorrateo_factor_unidad', function (Blueprint $table) {
+            $table->id('id_factor');
+            $table->foreignId('id_prorrateo')->constrained('prorrateo_regla', 'id_prorrateo')->onDelete('cascade');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad')->onDelete('cascade');
+            $table->decimal('factor', 12, 6);
+            $table->timestamps();
+
+            $table->unique(['id_prorrateo', 'id_unidad']);
+        });
+
+        Schema::create('trabajadores', function (Blueprint $table) {
+            $table->id('id_trabajador');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->string('tipo', 40);
+            $table->integer('rut_base');
+            $table->char('rut_dv', 1);
+            $table->string('nombres', 120);
+            $table->string('apellidos', 120);
+            $table->string('cargo', 80);
+            $table->string('email', 120)->nullable();
+            $table->string('telefono', 40)->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_condominio', 'rut_base', 'rut_dv']);
+        });
+
+        Schema::create('trabajador_contrato', function (Blueprint $table) {
+            $table->id('id_contrato');
+            $table->foreignId('id_trabajador')->constrained('trabajadores', 'id_trabajador')->onDelete('cascade');
+            $table->string('tipo_contrato', 40);
+            $table->date('fecha_inicio');
+            $table->date('fecha_termino')->nullable();
+            $table->decimal('sueldo_base', 12, 2)->default(0.00);
+            $table->string('jornada', 60)->nullable();
+            $table->string('documento_url', 500)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('remuneraciones', function (Blueprint $table) {
+            $table->id('id_remuneracion');
+            $table->foreignId('id_trabajador')->constrained('trabajadores', 'id_trabajador');
+            $table->enum('tipo', ['mensual', 'finiquito', 'bono', 'retroactivo', 'otro'])->default('mensual');
+            $table->char('periodo', 6);
+            $table->decimal('bruto', 12, 2)->default(0.00);
+            $table->decimal('imposiciones', 12, 2)->default(0.00);
+            $table->decimal('descuentos', 12, 2)->default(0.00);
+            $table->decimal('liquido', 12, 2);
+            $table->date('fecha_pago')->nullable();
+            $table->unsignedTinyInteger('id_metodo_pago')->nullable();
+            $table->string('comprobante_url', 500)->nullable();
+            $table->string('observacion', 300)->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_trabajador', 'periodo', 'tipo']);
+            $table->foreign('id_metodo_pago')->references('id_metodo_pago')->on('cat_metodo_pago')->onDelete('set null');
+        });
+
+        Schema::create('cargo_unidad', function (Blueprint $table) {
+            $table->id('id_cargo_uni');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad');
+            $table->char('periodo', 6);
+            $table->unsignedTinyInteger('id_concepto_cargo');
+            $table->enum('tipo', ['normal', 'extra', 'ajuste'])->default('normal');
+            $table->decimal('monto', 12, 2);
+            $table->string('detalle', 300)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_concepto_cargo')->references('id_concepto_cargo')->on('cat_concepto_cargo');
+        });
+
+        Schema::create('cargo_individual', function (Blueprint $table) {
+            $table->id('id_cargo_indv');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad');
+            $table->char('periodo', 6);
+            $table->string('tipo', 30);
+            $table->string('referencia', 60)->nullable();
+            $table->decimal('monto', 12, 2);
+            $table->string('detalle', 300)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('cobros', function (Blueprint $table) {
+            $table->id('id_cobro');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad');
+            $table->char('periodo', 6);
+            $table->timestamp('emitido_at')->useCurrent();
+            $table->unsignedTinyInteger('id_cobro_estado');
+            $table->enum('tipo', ['mensual', 'extraordinario', 'manual'])->default('mensual');
+            $table->foreignId('id_prorrateo')->nullable()->constrained('prorrateo_regla', 'id_prorrateo')->onDelete('set null');
+            $table->decimal('total_cargos', 12, 2)->default(0.00);
+            $table->decimal('total_descuentos', 12, 2)->default(0.00);
+            $table->decimal('total_interes', 12, 2)->default(0.00);
+            $table->decimal('total_pagado', 12, 2)->default(0.00);
+            $table->decimal('saldo', 12, 2)->default(0.00);
+            $table->decimal('monto_fondo_reserva', 12, 2)->default(0.00);
+            $table->string('observacion', 300)->nullable();
+            $table->timestamps();
+
+            $table->unique(['id_unidad', 'periodo', 'tipo']);
+            $table->foreign('id_cobro_estado')->references('id_cobro_estado')->on('cat_cobro_estado');
+        });
+
+        Schema::create('cobro_detalle', function (Blueprint $table) {
+            $table->id('id_cobro_det');
+            $table->foreignId('id_cobro')->constrained('cobros', 'id_cobro')->onDelete('cascade');
+            $table->enum('tipo', ['cargo_comun', 'cargo_individual', 'interes_mora', 'descuento', 'ajuste']);
+            $table->foreignId('id_cargo_uni')->nullable()->constrained('cargo_unidad', 'id_cargo_uni')->onDelete('set null');
+            $table->foreignId('id_cargo_indv')->nullable()->constrained('cargo_individual', 'id_cargo_indv')->onDelete('set null');
+            $table->foreignId('id_interes_regla')->nullable()->constrained('interes_regla', 'id_interes_regla')->onDelete('set null');
+            $table->decimal('tasa_aplicada_pct', 6, 3)->nullable();
+            $table->decimal('monto', 12, 2);
+            $table->string('glosa', 300)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('pagos', function (Blueprint $table) {
+            $table->id('id_pago');
+            $table->foreignId('id_unidad')->constrained('unidades', 'id_unidad');
+            $table->foreignId('cobro_id')->constrained('cobros', 'id_cobro');
+            $table->timestamp('fecha_pago');
+            $table->char('periodo', 6)->nullable();
+            $table->enum('tipo', ['normal', 'anticipo', 'ajuste'])->default('normal');
+            $table->decimal('monto_pagado', 12, 2);
+            $table->unsignedTinyInteger('id_metodo_pago');
+            $table->string('ref_externa', 120)->nullable();
+            $table->string('observacion', 300)->nullable();
+            $table->string('webpay_token')->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_metodo_pago')->references('id_metodo_pago')->on('cat_metodo_pago');
+        });
+
+        Schema::create('comprobante_pago', function (Blueprint $table) {
+            $table->id('id_compr_pago');
+            $table->foreignId('id_pago')->constrained('pagos', 'id_pago')->onDelete('cascade');
+            $table->string('folio', 40)->unique();
+            $table->string('url_pdf', 500)->nullable();
+            $table->timestamp('emitido_at')->useCurrent();
+            $table->timestamps();
+        });
+
+        Schema::create('pago_aplicacion', function (Blueprint $table) {
+            $table->id('id_pago_aplic');
+            $table->foreignId('id_pago')->constrained('pagos', 'id_pago')->onDelete('cascade');
+            $table->foreignId('id_cobro')->constrained('cobros', 'id_cobro')->onDelete('cascade');
+            $table->decimal('monto_aplicado', 12, 2);
+            $table->timestamp('aplicado_at')->useCurrent();
+            $table->timestamps();
+
+            $table->unique(['id_pago', 'id_cobro']);
+        });
+
+        Schema::create('pasarela_tx', function (Blueprint $table) {
+            $table->id('id_pasarela_tx');
+            $table->foreignId('id_pago')->constrained('pagos', 'id_pago')->onDelete('cascade');
+            $table->unsignedTinyInteger('id_pasarela');
+            $table->unsignedTinyInteger('id_estado_tx');
+            $table->json('payload_json')->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_pasarela')->references('id_pasarela')->on('cat_pasarela');
+            $table->foreign('id_estado_tx')->references('id_estado_tx')->on('cat_estado_tx');
+        });
+
+        Schema::create('gastos', function (Blueprint $table) {
+            $table->id('id_gasto');
+            $table->foreignId('condominio_id')->constrained('condominios', 'id_condominio');
+            $table->char('periodo', 6);
+            $table->unsignedSmallInteger('id_gasto_categ');
+            $table->foreignId('id_proveedor')->nullable()->constrained('proveedores', 'id_proveedor')->onDelete('set null');
+            $table->unsignedTinyInteger('id_doc_tipo')->nullable();
+            $table->string('documento_folio', 40)->nullable();
+            $table->date('fecha_emision')->nullable();
+            $table->date('fecha_venc')->nullable();
+            $table->decimal('neto', 12, 2)->default(0.00);
+            $table->decimal('iva', 12, 2)->default(0.00);
+            $table->decimal('total', 12, 2)->storedAs('ROUND(neto + iva, 2)');
+            $table->string('descripcion', 300)->nullable();
+            $table->string('evidencia_url', 500)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_gasto_categ')->references('id_gasto_categ')->on('gasto_categoria');
+            $table->foreign('id_doc_tipo')->references('id_doc_tipo')->on('cat_doc_tipo')->onDelete('set null');
+        });
+
+        Schema::create('fondo_reserva_mov', function (Blueprint $table) {
+            $table->id('id_fondo_reserva');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->timestamp('fecha');
+            $table->string('tipo', 10);
+            $table->char('periodo', 6)->nullable();
+            $table->decimal('monto', 12, 2);
+            $table->string('glosa', 300)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('libro_movimiento', function (Blueprint $table) {
+            $table->id('id_libro_mov');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->timestamp('fecha');
+            $table->unsignedSmallInteger('id_cta_contable');
+            $table->decimal('debe', 12, 2)->default(0.00);
+            $table->decimal('haber', 12, 2)->default(0.00);
+            $table->string('ref_tabla', 40)->nullable();
+            $table->unsignedBigInteger('ref_id')->nullable();
+            $table->string('glosa', 300)->nullable();
+            $table->timestamps();
+
+            $table->foreign('id_cta_contable')->references('id_cta_contable')->on('cuenta_contable');
+        });
+
+        Schema::create('auditoria', function (Blueprint $table) {
+            $table->id('id_auditoria');
+            $table->string('entidad', 40);
+            $table->unsignedBigInteger('entidad_id');
+            $table->string('accion', 10);
+            $table->foreignId('id_usuario')->nullable()->constrained('users', 'id_usuario')->onDelete('set null');
+            $table->string('usuario_email', 120)->nullable();
+            $table->json('detalle')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('resumen_mensual', function (Blueprint $table) {
+            $table->id('id_resumen');
+            $table->foreignId('id_condominio')->constrained('condominios', 'id_condominio');
+            $table->char('periodo', 6);
+            $table->decimal('total_gastos', 14, 2)->default(0.00);
+            $table->decimal('total_cargos', 14, 2)->default(0.00);
+            $table->decimal('total_interes', 14, 2)->default(0.00);
+            $table->decimal('total_descuentos', 14, 2)->default(0.00);
+            $table->decimal('total_pagado', 14, 2)->default(0.00);
+            $table->decimal('saldo_por_cobrar', 14, 2)->default(0.00);
+            $table->timestamp('generado_at')->useCurrent();
+            $table->timestamps();
+
+            $table->unique(['id_condominio', 'periodo']);
+        });
+
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('resumen_mensual');
+        Schema::dropIfExists('auditoria');
+        Schema::dropIfExists('libro_movimiento');
+        Schema::dropIfExists('fondo_reserva_mov');
+        Schema::dropIfExists('gastos');
+        Schema::dropIfExists('pasarela_tx');
+        Schema::dropIfExists('pago_aplicacion');
+        Schema::dropIfExists('comprobante_pago');
+        Schema::dropIfExists('pagos');
+        Schema::dropIfExists('cobro_detalle');
+        Schema::dropIfExists('cobros');
+        Schema::dropIfExists('cargo_individual');
+        Schema::dropIfExists('cargo_unidad');
+        Schema::dropIfExists('remuneraciones');
+        Schema::dropIfExists('trabajador_contrato');
+        Schema::dropIfExists('trabajadores');
+        Schema::dropIfExists('prorrateo_factor_unidad');
+        Schema::dropIfExists('prorrateo_regla');
+        Schema::dropIfExists('interes_regla');
+        Schema::dropIfExists('param_reglamento');
+        Schema::dropIfExists('cuenta_contable');
+        Schema::dropIfExists('proveedores');
+        Schema::dropIfExists('residencias');
+        Schema::dropIfExists('copropietarios');
+        Schema::dropIfExists('usuario_admin_condo');
+        Schema::dropIfExists('unidades');
+        Schema::dropIfExists('grupos');
+        Schema::dropIfExists('condominio_anexo_regla');
+        Schema::dropIfExists('condominios');
+        Schema::dropIfExists('cat_concepto_cargo');
+        Schema::dropIfExists('cat_cobro_estado');
+        Schema::dropIfExists('cat_vivienda_subtipo');
+        Schema::dropIfExists('cat_unidad_tipo');
+        Schema::dropIfExists('cat_segmento');
+        Schema::dropIfExists('cat_estado_tx');
+        Schema::dropIfExists('cat_pasarela');
+        Schema::dropIfExists('cat_metodo_pago');
+        Schema::dropIfExists('gasto_categoria');
+        Schema::dropIfExists('cat_doc_tipo');
+        Schema::dropIfExists('cat_tipo_cuenta');
+    }
+};
