@@ -2,26 +2,23 @@
 
 namespace Database\Factories;
 
+use App\Models\Gasto;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Gasto>
- */
 class GastoFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Gasto::class;
+
     public function definition(): array
     {
         return [
-            'descripcion' => $this->faker->sentence,
-            'monto' => $this->faker->numberBetween(1000, 100000),
-            'tipo' => 'ordinario',
-            'fecha_gasto' => $this->faker->date(),
-            'periodo_gasto' => $this->faker->date(),
+            'condominio_id' => \App\Models\Condominio::factory(),
+            'periodo' => $this->faker->date('Ym'),
+            'id_gasto_categ' => \App\Models\GastoCategoria::factory(),
+            'neto' => $this->faker->numberBetween(1000, 100000),
+            'iva' => $this->faker->numberBetween(190, 19000),
+            'descripcion' => $this->faker->text,
+            'fecha_emision' => $this->faker->dateTime(),
         ];
     }
 }

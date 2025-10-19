@@ -8,19 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class Cobro extends Model
 {
     use HasFactory;
+    protected $primaryKey = 'id_cobro';
 
     protected $fillable = [
-        'unidad_id',
+        'id_unidad',
         'periodo',
-        'monto_gasto_comun',
+        'id_cobro_estado',
+        'total_cargos',
         'monto_fondo_reserva',
-        'monto_multas',
-        'monto_total',
-        'estado',
     ];
 
     public function pagos()
     {
-        return $this->hasMany(Pago::class);
+        return $this->hasMany(Pago::class, 'cobro_id', 'id_cobro');
+    }
+
+    public function unidad()
+    {
+        return $this->belongsTo(Unidad::class, 'unidad_id');
     }
 }

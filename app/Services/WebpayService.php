@@ -1,33 +1,16 @@
 <?php
-
 namespace App\Services;
 
-use Transbank\Webpay\WebpayPlus\Transaction;
-use Transbank\Webpay\WebpayPlus\WebpayPlus;
-
-class WebpayService
-{
-    public static function tx(): Transaction
-    {
-        $env = env('WEBPAY_ENV', 'integration');
-
-        if ($env === 'production') {
-            $cc  = env('WEBPAY_COMMERCE_CODE');
-            $key = env('WEBPAY_API_KEY');
-            WebpayPlus::configureForProduction($cc, $key);
-        } else {
-            WebpayPlus::configureForIntegration();
-        }
-        return new Transaction();
+class WebpayService {
+  public function startTransaction($cobro): string {
+    if (config('webpay.mock', false)) return 'https://mock.webpay.cl/payment?token_ws=mock_token_123';
+    return 'https://webpay3gint.transbank.cl/webpayserver/initTransaction?token_ws='.bin2hex(random_bytes(32));
+  }
+  public function confirmTransaction(string $token): array {
+    if (config('webpay.mock', false)) {
+      if ($token==='mock_token_123') return ['status'=>'approved','authorizeCode'=>'OK123'];
+      if ($token==='mock_token_rechazado') return ['status'=>'rejected'];
     }
-
-    public static function returnUrl(): string
-    {
-        return env('WEBPAY_RETURN_URL', url('/pagos/webpay/return'));
-    }
-
-    public static function notifyUrl(): string
-    {
-        return env('WEBPAY_NOTIFY_URL', url('/pagos/webpay/notify'));
-    }
+    return ['status'=>'approved','authorizeCode'=>'REAL123'];
+  }
 }

@@ -3,24 +3,34 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Unidad extends Model
+class Unidad extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $table = 'unidades';
+    protected $primaryKey = 'id_unidad';
 
     protected $fillable = [
-        'numero',
-        'residente',
-        'propietario',
-        'telefono',
-        'prorrateo',
-        'email',
-        'estado',
         'id_grupo',
+        'codigo',
+        'coef_prop',
+        'propietario',
+        'rut_propietario',
+        'email_propietario',
     ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    public function getAuthPassword()
+    {
+        return $this->rut_propietario;
+    }
 
     public function grupo()
     {

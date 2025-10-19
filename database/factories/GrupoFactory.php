@@ -2,24 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Models\Grupo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Grupo>
- */
 class GrupoFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Grupo::class;
+
     public function definition(): array
     {
         return [
-            'nombre' => $this->faker->word,
+            'id_condominio' => \App\Models\Condominio::factory(),
+            'nombre' => 'Torre '.$this->faker->numberBetween(1, 4),
             'tipo' => 'torre',
-            'condominio_id' => \App\Models\Condominio::factory(),
         ];
     }
 }

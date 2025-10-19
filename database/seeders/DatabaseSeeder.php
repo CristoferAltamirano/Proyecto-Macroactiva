@@ -17,9 +17,11 @@ class DatabaseSeeder extends Seeder
         // Usamos User::create para crear el usuario de forma segura.
         // Esto utiliza el $fillable que ya corregimos en el modelo User.
         User::create([
-            'name' => 'Admin',
-            'email' => 'admin@macroactiva.com',
+            'name' => 'Super Admin',
+            'email' => 'superadmin@example.com',
             'password' => Hash::make('password'),
+            'tipo_usuario' => 'super-admin',
+            'id_unidad' => null,
         ]);
     }
 }

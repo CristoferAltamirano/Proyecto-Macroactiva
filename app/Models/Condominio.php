@@ -9,11 +9,11 @@ class Condominio extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'nombre',
-        'direccion',
-        'telefono',
-        'correo_electronico',
-        'administrador',
-    ];
+    protected $primaryKey = 'id_condominio';
+    protected $fillable = ['nombre'];
+
+    public function grupos()
+    {
+        return $this->hasMany(Grupo::class, 'id_condominio', 'id_condominio');
+    }
 }

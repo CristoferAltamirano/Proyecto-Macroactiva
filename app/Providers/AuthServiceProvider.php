@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -15,16 +16,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Pueden ver el libro: super_admin y admin
-        Gate::define('ver-libro', function ($user) {
-            if (method_exists($user, 'hasRole')) {
-                return $user->hasRole('super_admin') || $user->hasRole('admin');
+        // Grant all abilities to super-admin
+        Gate::before(function (User $user, $ability) {
+            if ($user->tipo_usuario === 'super-admin') {
+                return true;
             }
-            return in_array(($user->role ?? $user->rol ?? null), ['super_admin', 'admin'], true);
         });
 
-        Gate::define('super-admin', function ($user) {
-            return $user->role === 'super-admin';
+        // Define gate for residente guard
+        Gate::define('residente', function(User $user) {
+            return $user->tipo_usuario === 'residente';
         });
     }
 }

@@ -17,13 +17,13 @@ class CobroFactory extends Factory
     public function definition(): array
     {
         return [
-            'unidad_id' => \App\Models\Unidad::factory(),
-            'periodo' => $this->faker->date(),
-            'monto_gasto_comun' => $this->faker->numberBetween(1000, 100000),
-            'monto_fondo_reserva' => $this->faker->numberBetween(1000, 100000),
-            'monto_multas' => $this->faker->numberBetween(0, 10000),
-            'monto_total' => $this->faker->numberBetween(1000, 100000),
-            'estado' => 'pendiente',
+            'id_unidad' => function () {
+                return \App\Models\Unidad::factory()->create()->id_unidad;
+            },
+            'periodo' => $this->faker->date('Ym'),
+            'id_cobro_estado' => 1, // 'emitido'
+            'monto_total' => $this->faker->numberBetween(50000, 200000),
+            'monto_fondo_reserva' => $this->faker->numberBetween(10000, 50000),
         ];
     }
 }

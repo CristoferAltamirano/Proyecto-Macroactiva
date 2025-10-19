@@ -38,14 +38,14 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => ['required', Rule::in(['admin', 'super-admin'])],
+            'tipo_usuario' => ['required', Rule::in(['admin', 'super-admin'])],
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'tipo_usuario' => $request->tipo_usuario,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado correctamente.');
@@ -70,10 +70,10 @@ class AdminUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => ['required', Rule::in(['admin', 'super-admin'])],
+            'tipo_usuario' => ['required', Rule::in(['admin', 'super-admin'])],
         ]);
 
-        $data = $request->only('name', 'email', 'role');
+        $data = $request->only('name', 'email', 'tipo_usuario');
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
