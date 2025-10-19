@@ -11,6 +11,8 @@
         .main-container { display: flex; min-height: 100vh; }
         .sidebar { width: 280px; flex-shrink: 0; }
         .content { flex-grow: 1; padding: 2rem; overflow-y: auto; background-color: #f8f9fa; }
+        .btn-toggle-nav a { padding: .25rem 1rem; margin-top: .125rem; margin-left: 1.25rem; }
+        .btn-toggle-nav a:hover, .btn-toggle-nav a.active { background-color: #0d6efd; }
     </style>
 </head>
 <body>
@@ -47,20 +49,25 @@
                         <i class="bi bi-journal-check me-2"></i> Revisión de Cobros
                     </a>
                 </li>
+
+                {{-- Submenú Reportes --}}
+                <li class="nav-item mb-1">
+                    <a href="#submenu-reportes" data-bs-toggle="collapse" class="nav-link text-white {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                        <i class="bi bi-graph-up-arrow me-2"></i> Reportes
+                    </a>
+                    <div class="collapse {{ request()->routeIs('reportes.*') ? 'show' : '' }}" id="submenu-reportes">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                            <li><a href="{{ route('reportes.gastos') }}" class="nav-link rounded-3 text-white {{ request()->routeIs('reportes.gastos') ? 'active' : '' }}">Gastos Mensuales</a></li>
+                            <li><a href="{{ route('reportes.morosidad') }}" class="nav-link rounded-3 text-white {{ request()->routeIs('reportes.morosidad') ? 'active' : '' }}">Morosidad</a></li>
+                        </ul>
+                    </div>
+                </li>
             </ul>
             <hr>
-            @if(Auth::check() && Auth::user()->role === 'super-admin')
-            <div class="mb-3">
-                <a href="{{ route('users.index') }}" class="nav-link text-white {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                    <i class="bi bi-people-fill me-2"></i> Gestión de Administradores
-                </a>
-            </div>
-            <hr>
-            @endif
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-person-circle fs-4 me-2"></i>
-                    <strong>{{ Auth::user()->name }}</strong>
+                    <strong>{{ auth()->check() ? auth()->user()->name : 'Usuario' }}</strong>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
                     <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
@@ -85,13 +92,13 @@
             @endif
             @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>¡Error!</strong> Revisa los problemas en el formulario.
+                    <strong>¡Error!</strong> Por favor, revisa los problemas en el formulario.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
             @yield('content')
         </div>
-        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PanelController;
@@ -9,24 +10,22 @@ use App\Http\Controllers\GastoController;
 use App\Http\Controllers\GeneracionCobroController;
 use App\Http\Controllers\CobroController;
 use App\Http\Controllers\ResidenteLoginController;
+
 use App\Http\Controllers\PlanCuentasController;
 use App\Http\Controllers\LibroController;
-use App\Http\Controllers\PagoOnlineController;
 use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\PortalResidenteController;
 use App\Http\Controllers\CondominioController;
-use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\WebpayController;
 
 /*
 |--------------------------------------------------------------------------
 | Rutas del Panel de Administración
 |--------------------------------------------------------------------------
 */
-// Login de Administradores
 Route::get('/', [HomeController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'authenticate'])->name('login.do');
 
-// Rutas protegidas para Admins
 Route::middleware('auth')->group(function () {
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -40,7 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/cobros', [CobroController::class, 'index'])->name('cobros.index');
     Route::patch('/cobros/{cobro}/pagar', [CobroController::class, 'registrarPago'])->name('cobros.pagar');
 
-    // Rutas para Contabilidad
+    // Contabilidad
     Route::prefix('contabilidad')->name('contabilidad.')->group(function () {
         Route::resource('cuentas', PlanCuentasController::class);
         Route::post('cuentas/import', [PlanCuentasController::class, 'importCsv'])->name('cuentas.import');
@@ -49,8 +48,12 @@ Route::middleware('auth')->group(function () {
         Route::get('libro/export', [LibroController::class, 'exportCsv'])->name('libro.export');
     });
 
-    // Rutas de Super Admin
-    Route::middleware('can:super-admin')->group(function () {
+    // Reportes
+    Route::get('/reportes/morosidad', [ReporteController::class, 'morosidad'])->name('reportes.morosidad');
+    Route::get('/reportes/gastos', [ReporteController::class, 'gastosMensuales'])->name('reportes.gastos');
+
+    // Super Admin
+    Route::middleware('superadmin')->group(function () {
         Route::resource('users', AdminUserController::class)->parameters(['users' => 'user']);
         Route::resource('condominios', CondominioController::class);
     });
@@ -67,11 +70,12 @@ Route::prefix('portal')->name('portal.')->group(function () {
     Route::post('/logout', [ResidenteLoginController::class, 'logout'])->name('logout');
 
     Route::middleware('auth:residente')->group(function () {
-        Route::get('/dashboard', [PortalResidenteController::class, 'dashboard'])->name('dashboard');
-        Route::get('/cobro/{cobro}', [PortalResidenteController::class, 'showCobro'])->name('cobro.show');
-        Route::get('/cobro/{cobro}/pdf', [PortalResidenteController::class, 'descargarBoletaPDF'])->name('cobro.pdf');
-        Route::post('/pago/iniciar/{cobro}', [PagoOnlineController::class, 'iniciar'])->name('pago.iniciar');
-    });
+        Route::get('/dashboard', function () {
+            return '¡Bienvenido al portal de residentes!';
+        })->name('dashboard');
 
-    Route::get('/pago/confirmar', [PagoOnlineController::class, 'confirmar'])->name('pago.confirmar');
+        // Webpay (tests)
+        Route::post('/pago/{cobro}/iniciar', [WebpayController::class, 'iniciar'])->name('pago.iniciar');
+        Route::get('/pago/confirmar', [WebpayController::class, 'confirmar'])->name('pago.confirmar');
+    });
 });
